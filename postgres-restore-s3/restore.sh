@@ -76,8 +76,10 @@ fi
 
 echo "Restoring ${LATEST_BACKUP}"
 
-psql $POSTGRES_HOST_OPTS -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '$POSTGRES_DATABASE'; SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRES_DATABASE'; \i dump.sql;" || true
-psql $POSTGRES_HOST_OPTS -c "UPDATE pg_database SET datallowconn = 'true' WHERE datname = '$POSTGRES_DATABASE';"
+psql $POSTGRES_HOST_OPTS -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '$POSTGRES_DATABASE';"
+psql $POSTGRES_HOST_OPTS -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRES_DATABASE';"
 #psql $POSTGRES_HOST_OPTS -d $POSTGRES_DATABASE < dump.sql
+psql $POSTGRES_HOST_OPTS < dump.sql
+psql $POSTGRES_HOST_OPTS -c "UPDATE pg_database SET datallowconn = 'true' WHERE datname = '$POSTGRES_DATABASE';"
 
 echo "Restore complete"

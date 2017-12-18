@@ -51,6 +51,17 @@ export AWS_DEFAULT_REGION=$S3_REGION
 export PGPASSWORD=$POSTGRES_PASSWORD
 POSTGRES_HOST_OPTS="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER"
 
+if [ "${DROP_PUBLIC}" == "yes" ]; then
+	echo "Recreating the public schema"
+	psql $POSTGRES_HOST_OPTS -d $POSTGRES_DATABASE -c "drop schema public cascade; create schema public;"
+fi
+
+rm -f dump.sql.gz
+rm -f dump.sql
+psql $POSTGRES_HOST_OPTS -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '$POSTGRES_DATABASE';"
+psql $POSTGRES_HOST_OPTS -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRES_DATABASE';"
+psql $POSTGRES_HOST_OPTS -c "DROP DATABASE $POSTGRES_DATABASE;"
+
 echo "Finding latest backup"
 
 LATEST_BACKUP=$(aws s3 ls s3://$S3_BUCKET/$S3_PREFIX/ | sort | tail -n 1 | awk '{ print $4 }')
@@ -59,11 +70,6 @@ echo "Fetching ${LATEST_BACKUP} from S3"
 
 aws s3 cp s3://$S3_BUCKET/$S3_PREFIX/${LATEST_BACKUP} dump.sql.gz
 gzip -d dump.sql.gz
-
-if [ "${DROP_PUBLIC}" == "yes" ]; then
-	echo "Recreating the public schema"
-	psql $POSTGRES_HOST_OPTS -d $POSTGRES_DATABASE -c "drop schema public cascade; create schema public;"
-fi
 
 echo "Restoring ${LATEST_BACKUP}"
 

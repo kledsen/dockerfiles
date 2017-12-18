@@ -56,7 +56,7 @@ rm -f dump.sql.gz
 rm -f dump.sql
 psql $POSTGRES_HOST_OPTS -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '$POSTGRES_DATABASE';" || true
 psql $POSTGRES_HOST_OPTS -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRES_DATABASE';" || true
-psql $POSTGRES_HOST_OPTS -c "DROP DATABASE $POSTGRES_DATABASE;" } || true
+# psql $POSTGRES_HOST_OPTS -c "DROP DATABASE $POSTGRES_DATABASE;" } || true
 
 # env vars needed for aws tools
 export AWS_ACCESS_KEY_ID=$S3_ACCESS_KEY_ID

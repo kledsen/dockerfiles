@@ -43,13 +43,25 @@ if [ "${POSTGRES_PASSWORD}" = "**None**" ]; then
   exit 1
 fi
 
+
+export PGPASSWORD=$POSTGRES_PASSWORD
+POSTGRES_HOST_OPTS="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER"
+
+if [ "${DROP_PUBLIC}" == "yes" ]; then
+	echo "Recreating the public schema"
+	psql $POSTGRES_HOST_OPTS -d $POSTGRES_DATABASE -c "drop schema public cascade; create schema public;"
+fi
+
+rm -f dump.sql.gz
+rm -f dump.sql
+psql $POSTGRES_HOST_OPTS -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '$POSTGRES_DATABASE';"
+psql $POSTGRES_HOST_OPTS -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRES_DATABASE';"
+psql $POSTGRES_HOST_OPTS -c "DROP DATABASE $POSTGRES_DATABASE;"
+
 # env vars needed for aws tools
 export AWS_ACCESS_KEY_ID=$S3_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY=$S3_SECRET_ACCESS_KEY
 export AWS_DEFAULT_REGION=$S3_REGION
-
-export PGPASSWORD=$POSTGRES_PASSWORD
-POSTGRES_HOST_OPTS="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER"
 
 echo "Finding latest backup"
 

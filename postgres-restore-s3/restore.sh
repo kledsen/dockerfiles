@@ -49,14 +49,14 @@ POSTGRES_HOST_OPTS="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER"
 
 if [ "${DROP_PUBLIC}" == "yes" ]; then
 	echo "Recreating the public schema"
-	{ psql $POSTGRES_HOST_OPTS -d $POSTGRES_DATABASE -c "drop schema public cascade; create schema public;" } || true
+	psql $POSTGRES_HOST_OPTS -d $POSTGRES_DATABASE -c "drop schema public cascade; create schema public;" || true
 fi
 
 rm -f dump.sql.gz
 rm -f dump.sql
-{ psql $POSTGRES_HOST_OPTS -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '$POSTGRES_DATABASE';" } || true
-{ psql $POSTGRES_HOST_OPTS -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRES_DATABASE';" } || true
-{ psql $POSTGRES_HOST_OPTS -c "DROP DATABASE $POSTGRES_DATABASE;" } || true
+psql $POSTGRES_HOST_OPTS -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '$POSTGRES_DATABASE';" || true
+psql $POSTGRES_HOST_OPTS -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRES_DATABASE';" || true
+psql $POSTGRES_HOST_OPTS -c "DROP DATABASE $POSTGRES_DATABASE;" } || true
 
 # env vars needed for aws tools
 export AWS_ACCESS_KEY_ID=$S3_ACCESS_KEY_ID
@@ -74,11 +74,11 @@ gzip -d dump.sql.gz
 
 if [ "${DROP_PUBLIC}" == "yes" ]; then
 	echo "Recreating the public schema"
-	{ psql $POSTGRES_HOST_OPTS -d $POSTGRES_DATABASE -c "drop schema public cascade; create schema public;" } || true
+	psql $POSTGRES_HOST_OPTS -d $POSTGRES_DATABASE -c "drop schema public cascade; create schema public;" || true
 fi
 
 echo "Restoring ${LATEST_BACKUP}"
 
-{ psql $POSTGRES_HOST_OPTS -d $POSTGRES_DATABASE < dump.sql } || true
+psql $POSTGRES_HOST_OPTS -d $POSTGRES_DATABASE < dump.sql
 
 echo "Restore complete"
